@@ -2,9 +2,14 @@ import { NextResponse } from "next/server";
 
 export const runtime = "edge";
 
-// GET all transactions
-export async function GET(req: Request, context: any) {
-  const db = context.env.DB;
+// GET
+export async function GET(request: Request) {
+  // @ts-ignore
+  const db = (globalThis as any).DB;
+
+  if (!db) {
+    return NextResponse.json({ error: "DB not found" }, { status: 500 });
+  }
 
   const { results } = await db
     .prepare("SELECT * FROM transactions ORDER BY created_at DESC")
@@ -13,11 +18,16 @@ export async function GET(req: Request, context: any) {
   return NextResponse.json(results);
 }
 
-// ADD transaction
-export async function POST(req: Request, context: any) {
-  const db = context.env.DB;
+// POST
+export async function POST(request: Request) {
+  // @ts-ignore
+  const db = (globalThis as any).DB;
 
-  const body = await req.json();
+  if (!db) {
+    return NextResponse.json({ error: "DB not found" }, { status: 500 });
+  }
+
+  const body = await request.json();
   const { type, amount, category, note } = body;
 
   if (!type || !amount) {
